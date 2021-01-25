@@ -1,0 +1,76 @@
+import numpy as np
+import pandas as pd
+import sklearn.preprocessing as skpre
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from pandas import read_csv
+from pandas import DataFrame
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from scipy.special import boxcox1p
+from numpy import log
+from sklearn.svm import SVR
+from sklearn.preprocessing import StandardScaler
+
+#reading data
+features=pd.read_csv("C:\Python\walmart/features.csv")
+store=pd.read_csv("C:\Python\walmart/stores.csv")
+test=pd.read_csv("C:\Python\walmart/test.csv")
+train=pd.read_csv("C:\Python\walmart/train.csv")
+
+
+#preprocessing-replace na with zero for markdowns1 to 4
+features['MarkDown1'].fillna(0)
+features['MarkDown2'].fillna(0)
+features['MarkDown3'].fillna(0)
+features['MarkDown4'].fillna(0)
+
+#aggregating data based on store and date
+train=train.groupby(['Store','Date'])['Weekly_Sales'].sum()
+train=train.reset_index()
+
+#Merging data into one big file
+data=pd.merge(train,store,on=['Store'],how='inner')
+data=pd.merge(data,features,on=['Store','Date'],how='inner')
+
+# the number of missing values for every column
+count_nan = data.isnull().sum() 
+print('Number of missing values for each of columns:')
+print(count_nan[count_nan > 0])
+
+#Forming Regression values:
+
+X_num=data[['CPI','Fuel_Price','Size']]
+Y_final=data[['Weekly_Sales']]
+
+
+
+lr = LinearRegression().fit(X_num,Y_final)
+#print score
+print(' score %.3f' %(lr.score(X_num,Y_final)))
+
+#Support Vector:
+#Support Vector Regressor
+
+X_final=np.nan_to_num(X_num)
+Y_final=np.nan_to_num(Y_final)
+
+svr=SVR(kernel='poly',C=1000)
+X_train,X_test,y_train,y_test = train_test_split(X_num,Y_final, test_size = 0.33, random_state = 0)
+
+sc=StandardScaler()
+X_train = sc.fit_transform(X_train.astype(np.float))
+
+
+svr=svr.fit(X_train,y_train.ravel())
+
+y_train_pred=svr.fit(X_train,y_train.ravel())
+y_test_pred=svr.fit(X_train,y_train.ravel())
+
+print(y_train_pred)
+
+
+score = svr.score(X_train,y_train)
+print('SVR coeffiicent=.%4f'%(score))
+
