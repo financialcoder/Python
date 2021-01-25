@@ -1,3 +1,4 @@
+#Develop linear regression and svm models to forecast sales based on walmart data: https://www.kaggle.com/c/walmart-recruiting-store-sales-forecasting/data
 import numpy as np
 import pandas as pd
 import sklearn.preprocessing as skpre
